@@ -30,6 +30,8 @@ QT_QPA_PLATFORM=offscreen ./streamcontrol-tests -o results.xml,junitxml
 cd "$root/build"
 app=StreamControl.app
 macdeployqt "$app" -always-overwrite
+# macdeployqt skips some transitive @rpath dylibs from Homebrew.
+python3 "$root/scripts/bundle-missing-libs.py" "$app" "$(brew --prefix)/lib" "$(brew --prefix qt@5)/lib"
 mkdir -p "$app/Contents/Resources/licenses"
 cp "$root/LICENSE" "$app/Contents/Resources/licenses/StreamControl.txt"
 cp "$root/MACOS.md" "$app/Contents/Resources/BUILD-NOTES.md"
@@ -40,7 +42,8 @@ find "$qt_prefix/" -maxdepth 1 -type f \( -name 'LICENSE*' -o -name 'LGPL*' \) \
 
 # Ad-hoc sign nested code after all deployment changes, then sign the bundle.
 while IFS= read -r -d '' binary; do
-  if file -b "$binary" | grep -q 'Mach-O'; then
+  # Avoid a grep -q pipe: with pipefail, an early exit can SIGPIPE file and skip signing.
+  if [[ "$(file -b "$binary")" == *Mach-O* ]]; then
     codesign --force --sign - "$binary"
   fi
 done < <(find "$app" -type f -print0)

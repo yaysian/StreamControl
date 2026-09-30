@@ -206,3 +206,9 @@ Makefile*
 
 #Ignore Twitter
 StreamControl/twitterOauth.h
+# macOS build outputs
+__pycache__/
+/build/
+/build-tests/
+/dist/
+_to_delete/

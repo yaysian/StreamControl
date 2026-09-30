@@ -10,6 +10,12 @@ case "$arch" in arm64|x86_64) ;; *) echo 'Unsupported architecture' >&2; exit 1;
 export PATH="$(brew --prefix qt@5)/bin:$PATH"
 qmake -v
 [[ "$(qmake -query QT_VERSION)" == 5.* ]] || { echo 'Qt 5 is required.' >&2; exit 1; }
+# Confirm the Qt modules the project needs are installed (Qt Script is no longer used).
+qt_libs="$(qmake -query QT_INSTALL_LIBS)"
+for module in QtCore QtGui QtWidgets QtXml QtNetwork QtTest; do
+  [[ -d "$qt_libs/$module.framework" ]] || { echo "Missing Qt module: $module" >&2; exit 1; }
+done
+echo "Qt modules present in $qt_libs"
 
 mkdir -p build build-tests dist
 cd build

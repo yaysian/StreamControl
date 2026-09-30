@@ -1,0 +1,54 @@
+name: Build macOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master, main, macos-build]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: AppleSilicon
+            runner: macos-15
+            arch: arm64
+          - name: Intel
+            runner: macos-15-intel
+            arch: x86_64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Qt 5
+        run: |
+          brew install qt@5
+          echo "$(brew --prefix qt@5)/bin" >> "$GITHUB_PATH"
+          brew list --versions qt@5
+          xcodebuild -version
+          sw_vers
+      - name: Build, test, and package
+        env:
+          BUILD_ARCH: ${{ matrix.arch }}
+          ARTIFACT_NAME: StreamControl-${{ matrix.name }}
+        run: bash scripts/build-macos.sh
+      - name: Upload application
+        uses: actions/upload-artifact@v4
+        with:
+          name: StreamControl-${{ matrix.name }}
+          path: dist/*.zip
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestResults-${{ matrix.name }}
+          path: build-tests/results.xml
+          if-no-files-found: ignore

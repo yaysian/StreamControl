@@ -13,5 +13,10 @@ Report bugs at http://github.com/farpenoodle/StreamControl/issues
 
 GNU/Linux build instructions:
 
-Install QtCreator and Qt5-script.
+Install QtCreator and Qt5 development packages (Widgets, XML, and Network).
 In the same directory as StreamControl.pro run "qmake && make".
+
+macOS builds (Apple Silicon and Intel):
+
+See MACOS.md for GitHub Actions builds, packaging, settings paths, and validation.
+Qt Script is no longer required; JSON responses use Qt's built-in JSON parser.

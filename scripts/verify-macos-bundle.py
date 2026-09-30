@@ -35,8 +35,12 @@ def verify(bundle, architecture):
             return path.is_relative_to(bundle) and path.exists()
         for path in rpaths:
             assert path.startswith(('@loader_path', '@executable_path')) and expand(path).is_relative_to(bundle), (binary, path)
+        # A dylib's own install name is listed by otool -L but is not a dependency.
+        own_id = output('otool', '-D', str(binary)).splitlines()[1:]
         for line in output('otool', '-L', str(binary)).splitlines()[1:]:
             dependency = line.strip().split(' (compatibility version', 1)[0]
+            if dependency in own_id:
+                continue
             if dependency.startswith(('/System/Library/', '/usr/lib/')):
                 continue
             if dependency.startswith('@rpath/'):

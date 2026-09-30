@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 
 # GitHub truncates annotation messages at roughly 4 KB.
 LIMIT = 3800
-INTERESTING = re.compile(r'error|^Bundled |^Replaced external|^Removed rpath|fail|traceback|assert|undefined|not found|cannot|\*\*\*', re.I)
+INTERESTING = re.compile(r'error|^Bundled |^Signed |^Replaced external|^Removed rpath|fail|traceback|assert|undefined|not found|cannot|\*\*\*', re.I)
 NOISE = re.compile(r'replacing existing signature|^\S*/(clang\+\+|moc|uic|rcc) ')
 
 

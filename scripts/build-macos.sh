@@ -44,16 +44,7 @@ find "$qt_prefix/" -maxdepth 1 -type f \( -name 'LICENSE*' -o -name 'LGPL*' \) \
   -exec cp {} "$app/Contents/Resources/licenses/" \;
 
 # Ad-hoc sign nested code after all deployment changes, then sign the bundle.
-while IFS= read -r -d '' binary; do
-  # Avoid a grep -q pipe: with pipefail, an early exit can SIGPIPE file and skip signing.
-  if [[ "$(file -b "$binary")" == *Mach-O* ]]; then
-    codesign --force --sign - "$binary"
-  fi
-done < <(find "$app" -type f -print0)
-while IFS= read -r framework; do
-  codesign --force --sign - "$framework"
-done < <(find "$app" -depth -type d -name '*.framework')
-codesign --force --sign - "$app"
+python3 "$root/scripts/sign-macos-bundle.py" "$app"
 codesign --verify --deep --strict "$app"
 python3 "$root/scripts/verify-macos-bundle.py" "$app" "$arch"
 

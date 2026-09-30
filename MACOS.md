@@ -23,6 +23,9 @@ runs automated checks, bundles Qt with `macdeployqt`, and applies an ad-hoc sign
 It rejects missing Cocoa plugins, wrong architectures, and non-system dependencies
 outside the application before uploading the ZIP. These are separate apps, not a
 universal binary. Homebrew's Qt 5 version is not pinned; the logs record the version.
+Packaging also copies Homebrew libraries that `macdeployqt` misses, removes search
+paths into Homebrew, and omits Qt's unused on-screen virtual keyboard plugins.
+If a job fails, its error annotations show the relevant log lines without signing in.
 
 These personal-use builds are not Developer ID signed or notarized. macOS may
 require approval in **System Settings → Privacy & Security → Open Anyway** after

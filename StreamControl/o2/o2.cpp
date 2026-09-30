@@ -6,8 +6,8 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QNetworkAccessManager>
-#include <QScriptEngine>
-#include <QScriptValueIterator>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QDateTime>
 #include <QCryptographicHash>
 #include <QTimer>
@@ -230,14 +230,8 @@ void O2::onTokenReplyFinished() {
     QNetworkReply *tokenReply = qobject_cast<QNetworkReply *>(sender());
     if (tokenReply->error() == QNetworkReply::NoError) {
         QByteArray replyData = tokenReply->readAll();
-        QScriptEngine engine;
-        QScriptValueIterator it(engine.evaluate("(" + QString(replyData) + ")"));
-        QVariantMap tokens;
-
-        while (it.hasNext()) {
-            it.next();
-            tokens.insert(it.name(), it.value().toVariant());
-        }
+        const QVariantMap response = QJsonDocument::fromJson(replyData).object().toVariantMap();
+        QVariantMap tokens = response;
         // Check for mandatory tokens
         if (tokens.contains(O2_OAUTH2_ACCESS_TOKEN)) {
             setToken(tokens.take(O2_OAUTH2_ACCESS_TOKEN).toString());
@@ -357,12 +351,15 @@ void O2::onRefreshFinished() {
     trace() << "O2::onRefreshFinished: Error" << (int)refreshReply->error() << refreshReply->errorString();
     if (refreshReply->error() == QNetworkReply::NoError) {
         QByteArray reply = refreshReply->readAll();
-        QScriptValue value;
-        QScriptEngine engine;
-        value = engine.evaluate("(" + QString(reply) + ")");
-        setToken(value.property(O2_OAUTH2_ACCESS_TOKEN).toString());
-        setExpires(QDateTime::currentMSecsSinceEpoch() / 1000 + value.property(O2_OAUTH2_EXPIRES_IN).toInteger());
-        setRefreshToken(value.property(O2_OAUTH2_REFRESH_TOKEN).toString());
+        const QVariantMap value = QJsonDocument::fromJson(reply).object().toVariantMap();
+        if (value.value(O2_OAUTH2_ACCESS_TOKEN).toString().isEmpty()) {
+            onRefreshError(QNetworkReply::ProtocolFailure);
+            refreshReply->deleteLater();
+            return;
+        }
+        setToken(value.value(O2_OAUTH2_ACCESS_TOKEN).toString());
+        setExpires(QDateTime::currentMSecsSinceEpoch() / 1000 + value.value(O2_OAUTH2_EXPIRES_IN).toLongLong());
+        setRefreshToken(value.value(O2_OAUTH2_REFRESH_TOKEN).toString());
         timedReplies_.remove(refreshReply);
         emit linkingSucceeded();
         emit tokenChanged();

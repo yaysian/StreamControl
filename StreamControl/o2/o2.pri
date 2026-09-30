@@ -1,4 +1,4 @@
-QT += network script
+QT += network
 INCLUDEPATH += $$PWD
 SOURCES += \
     $$PWD/o1.cpp \

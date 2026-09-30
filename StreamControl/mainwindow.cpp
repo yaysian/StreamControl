@@ -65,9 +65,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef Q_OS_WIN
     #include "windows.h"
 #endif
-#ifdef Q_OS_MAC
-    #include <Carbon/Carbon.h>
-#endif
 #include "win_keyhelper.h"
 
 MainWindow::MainWindow()
@@ -233,14 +230,6 @@ bool MainWindow::nativeEvent(const QByteArray &eventType, void *message, long *r
          }
     }
     #endif
-    //osx
-    #ifdef Q_OS_MAC
-    if (eventType=="mac_generic_NSEvent")
-    {
-        //cast message
-        EventRef* msg=static_cast<EventRef*>(message);
-    }
-    #endif
  return false;
 
 }
@@ -294,6 +283,10 @@ void MainWindow::loadSettings() {
 
         settings["outputPath"] = outputPath;
         settings["useCDATA"] = "0";
+#ifdef Q_OS_MAC
+        settings["layoutPath"] = QDir::current().filePath("layout.xml");
+        settings["outputPath"] = QDir::currentPath() + "/";
+#endif
         useCDATA = false;
         settings["format"] = QString::number(SC_JSON);
         saveFormat = SC_JSON;

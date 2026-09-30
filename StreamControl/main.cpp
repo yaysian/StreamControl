@@ -30,6 +30,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <QPalette>
 #include <QFile>
 #include <QDomDocument>
+#include "apppaths.h"
+#include <QMessageBox>
 
 int main(int argc, char *argv[])
 {
@@ -39,6 +41,13 @@ int main(int argc, char *argv[])
     #endif
     QApplication a(argc, argv);    
     a.setStyle("fusion");
+
+    const QString startupError = prepareApplicationData();
+    if (!startupError.isEmpty()) {
+        QMessageBox::critical(nullptr, "StreamControl", startupError);
+        return 1;
+    }
+
 
 
 

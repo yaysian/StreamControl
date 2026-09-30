@@ -7,7 +7,7 @@
 #include <QUrl>
 #include <QFileInfo>
 #include <QFile>
-#include <QScriptEngine>
+#include <QJsonArray>
 #include <QGridLayout>
 #include <QLineEdit>
 #include <QLabel>
@@ -96,35 +96,36 @@ void TwitterWidget::replyFinished() {
 
     //qDebug() << QString(replyData);
 
-    QScriptValue value;
-    QScriptEngine engine;
-
-    QJsonDocument jsonDoc;
-    jsonDoc = QJsonDocument::fromJson(QString(replyData).toUtf8());
+    const QJsonDocument jsonDoc = QJsonDocument::fromJson(replyData);
+    if (reply->error() != QNetworkReply::NoError || !jsonDoc.isObject() ||
+        !jsonDoc.object().value("full_text").isString()) {
+        label->setText("Unable to load tweet: invalid response");
+        reply->deleteLater();
+        return;
+    }
 
     QJsonObject jsonObj;
     jsonObj = jsonDoc.object();
 
     tweetJSON = jsonObj;
 
-    value = engine.evaluate("(" + QString(replyData) + ")");
+    const QJsonArray urls = jsonObj.value("entities").toObject().value("urls").toArray();
+    const QJsonArray media = jsonObj.value("extended_entities").toObject().value("media").toArray();
+    const QJsonObject user = jsonObj.value("user").toObject();
 
-    QScriptValue urls = value.property("entities").property("urls");
-    QScriptValue media = value.property("extended_entities").property("media");
-
-    tweetText = value.property("full_text").toString();
-    twitterName = value.property("user").property("name").toString();
-    tweetCreated = value.property("created_at").toString();
-    profilePicUrl = value.property("user").property("profile_image_url").toString().replace("_normal","");
+    tweetText = jsonObj.value("full_text").toString();
+    twitterName = user.value("name").toString();
+    tweetCreated = jsonObj.value("created_at").toString();
+    profilePicUrl = user.value("profile_image_url").toString().replace("_normal","");
 
     int urlIterator = 0;
 
-    while (urls.property(urlIterator).isValid()) {
+    while (urlIterator < urls.size()) {
         QMap<QString,QString> urlE;
 
-        urlE["url"] = urls.property(urlIterator).property("url").toString();
-        urlE["display_url"] = urls.property(urlIterator).property("display_url").toString();
-        urlE["expanded_url"] = urls.property(urlIterator).property("expanded_url").toString();
+        urlE["url"] = urls.at(urlIterator).toObject().value("url").toString();
+        urlE["display_url"] = urls.at(urlIterator).toObject().value("display_url").toString();
+        urlE["expanded_url"] = urls.at(urlIterator).toObject().value("expanded_url").toString();
 
         urlArray.insert(urlIterator,urlE);
 
@@ -133,14 +134,14 @@ void TwitterWidget::replyFinished() {
 
     int mediaIterator = 0;
     mediaDone = true;
-    while (media.property(mediaIterator).isValid()) {
+    while (mediaIterator < media.size()) {
         QMap<QString,QString> mediaE;
 
-        mediaE["url"] = media.property(mediaIterator).property("url").toString();
-        mediaE["display_url"] = media.property(mediaIterator).property("display_url").toString();
-        mediaE["expanded_url"] = media.property(mediaIterator).property("expanded_url").toString();
-        mediaE["type"] = media.property(mediaIterator).property("type").toString();
-        mediaE["media_url"] = media.property(mediaIterator).property("media_url").toString();
+        mediaE["url"] = media.at(mediaIterator).toObject().value("url").toString();
+        mediaE["display_url"] = media.at(mediaIterator).toObject().value("display_url").toString();
+        mediaE["expanded_url"] = media.at(mediaIterator).toObject().value("expanded_url").toString();
+        mediaE["type"] = media.at(mediaIterator).toObject().value("type").toString();
+        mediaE["media_url"] = media.at(mediaIterator).toObject().value("media_url").toString();
 
         if(mediaIterator == 0 && mediaE["type"] == "photo") {
             mediaDone = false;

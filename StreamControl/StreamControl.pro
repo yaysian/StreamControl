@@ -4,7 +4,8 @@
 #
 #-------------------------------------------------
 
-QT       += core gui xml widgets network script
+QT       += core gui xml widgets network
+CONFIG += c++11
 
 TARGET = StreamControl
 TEMPLATE = app
@@ -25,13 +26,15 @@ FORMS    += \
 RESOURCES += \
     resources.qrc
 
-RC_FILE = streamcontrol.rc
+win32:RC_FILE = streamcontrol.rc
 
 OTHER_FILES += \
     o2/o2.pri
 
 macx {
-    LIBS += -framework Carbon
+    CONFIG += app_bundle
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 15.0
+    QMAKE_TARGET_BUNDLE_PREFIX = org.streamcontrol
 }
 
 

@@ -6,7 +6,8 @@
 #include <QDesktopServices>
 #if QT_VERSION >= 0x050000
 #include <QUrlQuery>
-#include <QScriptEngine>
+#include <QJsonDocument>
+#include <QJsonObject>
 #endif
 
 #include "o2twitter.h"
@@ -47,10 +48,18 @@ void O2Twitter::onTokenReplyFinished() {
     QNetworkReply *tokenReply = qobject_cast<QNetworkReply *>(sender());
     if (tokenReply->error() == QNetworkReply::NoError) {
         QByteArray replyData = tokenReply->readAll();
-        QScriptValue value;
-        QScriptEngine engine;
-        value = engine.evaluate("(" + QString(replyData) + ")");
-        setToken(value.property(O2_OAUTH2_ACCESS_TOKEN).toString());
+        const QJsonObject value = QJsonDocument::fromJson(replyData).object();
+        const QString accessToken = value.value(O2_OAUTH2_ACCESS_TOKEN).toString();
+        if (accessToken.isEmpty()) {
+            setToken(QString());
+            timedReplies_.remove(tokenReply);
+            emit linkedChanged();
+            emit tokenChanged();
+            emit linkingFailed();
+            tokenReply->deleteLater();
+            return;
+        }
+        setToken(accessToken);
         timedReplies_.remove(tokenReply);
         emit linkedChanged();
         emit tokenChanged();

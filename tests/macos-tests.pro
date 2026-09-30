@@ -1,0 +1,15 @@
+QT += core gui widgets xml network testlib
+CONFIG += console testcase c++11
+CONFIG -= app_bundle
+TEMPLATE = app
+TARGET = streamcontrol-tests
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 15.0
+APP = $$PWD/../StreamControl
+INCLUDEPATH += $$APP
+SOURCES += $$files($$APP/*.cpp) $$files($$APP/o2/*.cpp) $$files($$APP/dialogs/*.cpp) $$files($$APP/widgets/*.cpp)
+SOURCES -= $$APP/main.cpp
+SOURCES += $$PWD/macos-tests.cpp
+HEADERS += $$files($$APP/*.h) $$files($$APP/o2/*.h) $$files($$APP/dialogs/*.h) $$files($$APP/widgets/*.h)
+FORMS += $$APP/configwindow.ui
+RESOURCES += $$APP/resources.qrc
+win32:LIBS += -luser32

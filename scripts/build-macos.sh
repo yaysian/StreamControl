@@ -30,7 +30,10 @@ QT_QPA_PLATFORM=offscreen ./streamcontrol-tests -o results.xml,junitxml
 cd "$root/build"
 app=StreamControl.app
 macdeployqt "$app" -always-overwrite
-# macdeployqt skips some transitive @rpath dylibs from Homebrew.
+# StreamControl is a desktop app; the on-screen keyboard only adds Qt Quick plugins.
+ls -l "$app/Contents/PlugIns/platforminputcontexts" || true
+rm -rf "$app/Contents/PlugIns/virtualkeyboard"   "$app/Contents/PlugIns/platforminputcontexts/libqtvirtualkeyboardplugin.dylib"
+# macdeployqt skips some transitive @rpath dylibs and external symlinks/rpaths.
 python3 "$root/scripts/bundle-missing-libs.py" "$app" "$(brew --prefix)/lib" "$(brew --prefix qt@5)/lib"
 mkdir -p "$app/Contents/Resources/licenses"
 cp "$root/LICENSE" "$app/Contents/Resources/licenses/StreamControl.txt"

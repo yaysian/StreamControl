@@ -14,6 +14,9 @@ def verify(bundle, architecture):
     assert (executable_dir / 'StreamControl').is_file(), 'Missing executable'
     assert (bundle / 'Contents/PlugIns/platforms/libqcocoa.dylib').is_file(), 'Missing Cocoa plugin'
     binaries = 0
+    for link in bundle.rglob('*'):
+        if link.is_symlink():
+            assert link.resolve().is_relative_to(bundle) and link.exists(), (link, link.resolve())
     for binary in bundle.rglob('*'):
         if binary.is_symlink() or not binary.is_file():
             continue
